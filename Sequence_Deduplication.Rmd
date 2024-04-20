@@ -1,0 +1,23 @@
+
+```{r)
+library(data.table)
+library(dplyr)
+
+## Creation of a dataset identifying my duplicates ##
+
+## Ordering the records by the sample ID and a ranked score for the quality of the sequence
+dups  <- dups[order(dups$Sample.ID, dups$QualityRank),]
+
+## Identifying which in a pair is the "better" sequence
+dups <- dups %>% mutate(IsWorse = 0)
+dups2$IsWorse <- ifelse(dups$Sample.ID == shift(dups$Sample.ID) & dups$QualityRank > shift(dups$QualityRank), 1, 0) 
+
+## Now we have marked all of the sequences that were a lower quality than the other one in the pair, if they aren't "better", take the most recent sequence
+dups2  <- dups[order(dups$Sample.ID, -dups$QualityRank),]
+
+dups2 <- dups2 %>% mutate(IsEarlier = 0)
+dups2$IsEarlier  <- ifelse(dups2$Sample.ID == shift(dups2$Sample.ID) & dups2$QualityRank < shift(dups2$QualityRank), 1, 0) 
+
+##List of Excluded Sequences
+dups_rejects <- dups2 %>% filter(IsWorse == 1 | IsEarlier == 1)
+```
